@@ -328,8 +328,8 @@ public:
     // of the form (ax+b)/(cx+d) = (ex+f)/(gx+h) that has the same roots as the
     // equation c_1 x^2 + c_2 x + c_3 = 0
 
-    // For those who are interested, cross multiply and match coefficients (x^2,
-    // x and the constant term).
+    // (For those who are interested, cross multiply and match coefficients (x^2,
+    // x and the constant term)).
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -342,6 +342,13 @@ public:
 
     p = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
     q = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+
+    while (p == "0") {
+      p = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    }
+    while (q == "0") {
+      q = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    }
 
     c_1 = "1";
     c_2 = (p + q) * "-1";
@@ -427,16 +434,10 @@ public:
 };
 
 int main() {
-  std::random_device rd;
-  std::mt19937 genn(rd());
-  std::uniform_int_distribution<int> dis(0, 3);
-
   ICSEQuestionGenerator *gen = new ICSEMathQuestionGenerator(10);
   gen->setMaxDecimalPlaces(1);
-  for (int i = 0;; i++) {
-    // random number between 0 and 3
-    gen->setQuestionType((ICSEQuestionGenerator::QuestionType)dis(genn));
-
+  gen->setQuestionType(ICSEQuestionGenerator::TEDIOUS_QUADRATIC_FACTORABLE);
+  for (int i = 0;i<10; i++) {
     ICSEQuestion *question = gen->generateQuestion();
     if (question == NULL) {
       std::cerr << "Error: Question generation failed." << std::endl;
