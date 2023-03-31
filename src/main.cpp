@@ -6,6 +6,7 @@
 #include <string>
 
 typedef basic_math_operations::BMONum bmo_num;
+typedef arithmetica::Fraction am_frac;
 
 class ICSEQuestionGenerator {
 protected:
@@ -21,7 +22,8 @@ public:
   enum QuestionType {
     EXAMINE_ROOTS,
     FIND_COEFFICIENTS_QUADRATIC,
-    SIMPLE_QUADRATIC_FACTORABLE
+    SIMPLE_QUADRATIC_FACTORABLE,
+    TEDIOUS_QUADRATIC_FACTORABLE
   };
   // Functions to get and set the question type.
   QuestionType getQuestionType() { return static_cast<QuestionType>(type); }
@@ -303,11 +305,103 @@ public:
     answer =
         "x = " + arithmetica::to_string(f1) + ", " + arithmetica::to_string(f2);
     if (q_index == 4) {
-      answer = "{(" + answer + ")}";
+      answer = "x = {(" + arithmetica::to_string(f1) + ", " + arithmetica::to_string(f2) + ")}";
+    } else {
+      answer =
+        "x = " + arithmetica::to_string(f1) + ", " + arithmetica::to_string(f2);
     }
   }
   ICSEQuestionGenerator::QuestionType getType() override {
     return ICSEQuestionGenerator::SIMPLE_QUADRATIC_FACTORABLE;
+  }
+  std::string getQuestion() override { return question; }
+  std::string getAnswer() override { return answer; }
+};
+
+class TediousQuadraticFactorableQuestion : public ICSEMathQuestion {
+protected:
+  am_frac a, b, c, d, e, f, g, h, c_1, c_2, c_3, p, q, t;
+
+public:
+  TediousQuadraticFactorableQuestion(unsigned long long max_decimal_places) {
+    // I've done a bunch of math to generate a quadratic equation
+    // of the form (ax+b)/(cx+d) = (ex+f)/(gx+h) that has the same roots as the
+    // equation c_1 x^2 + c_2 x + c_3 = 0
+
+    // For those who are interested, cross multiply and match coefficients (x^2,
+    // x and the constant term).
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis_no_digits(1, max_decimal_places);
+
+    // First generate the simple quadratic equation.
+    // Since I don't support torture, I'm gonna let the roots of this equation
+    // be good old integers. f(x) = (x - p)(x - q), roots are p and q
+    //    ==> x^2 - (p + q) x + pq = 0
+
+    p = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    q = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+
+    c_1 = "1";
+    c_2 = (p + q) * "-1";
+    c_3 = p * q;
+
+    // Derived from the math mentioned above.
+    a = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    b = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    c = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    d = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    e = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+
+    while (a == "0") {
+      a = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+    }
+
+    g = (c * e + c_1) / a;
+    t = b * g - d * e - c_2;
+
+    am_frac denom = b * c - a * d;
+
+    while (denom == "0") {
+      c = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+      d = am_frac(basic_math_operations::random(dis_no_digits(gen)).number);
+      g = (c * e + c_1) / a;
+      t = b * g - d * e - c_2;
+      denom = b * c - a * d;
+    }
+
+    f = (c_3 * a + b * t) / denom;
+    h = (c_3 * c + d * t) / denom;
+
+    std::vector<std::pair<std::string, std::string>> question_variations = {
+        {"Solve the following equation: ", ""},
+        {"Find the solutions of the following quadratic equation: ", ""},
+        {"What is the value(s) of x if ", ""},
+        {"Find the value(s) of x such that ", ""},
+        {"Find the solution set of the following equation: ", ""}};
+
+    std::uniform_int_distribution<int> dis_q_variations(
+        0, question_variations.size() - 1);
+    size_t q_index = dis_q_variations(gen);
+    std::pair<std::string, std::string> q_variation =
+        question_variations[q_index];
+    question = q_variation.first + "(" + arithmetica::to_string(a) + "x + " +
+               arithmetica::to_string(b) + ")/(" + arithmetica::to_string(c) +
+               "x + " + arithmetica::to_string(d) + ") = (" +
+               arithmetica::to_string(e) + "x + " + arithmetica::to_string(f) +
+               ")/(" + arithmetica::to_string(g) + "x + " +
+               arithmetica::to_string(h) + ")" + q_variation.second;
+    if (q_index == 4) {
+      answer = "x = {(" + arithmetica::to_string(p) + ", " + arithmetica::to_string(q) + ")}";
+    } else {
+      answer =
+        "x = " + arithmetica::to_string(p) + ", " + arithmetica::to_string(q);
+    }
+  }
+
+  ICSEQuestionGenerator::QuestionType getType() override {
+    return ICSEQuestionGenerator::TEDIOUS_QUADRATIC_FACTORABLE;
   }
   std::string getQuestion() override { return question; }
   std::string getAnswer() override { return answer; }
@@ -324,6 +418,8 @@ public:
       return new FindCoefficientsQuadraticQuestion(max_decimal_places);
     case SIMPLE_QUADRATIC_FACTORABLE:
       return new SimpleQuadraticFactorableQuestion(max_decimal_places);
+    case TEDIOUS_QUADRATIC_FACTORABLE:
+      return new TediousQuadraticFactorableQuestion(max_decimal_places);
     default:
       return nullptr;
     }
@@ -331,10 +427,16 @@ public:
 };
 
 int main() {
+  std::random_device rd;
+  std::mt19937 genn(rd());
+  std::uniform_int_distribution<int> dis(0, 3);
+
   ICSEQuestionGenerator *gen = new ICSEMathQuestionGenerator(10);
-  gen->setQuestionType(ICSEQuestionGenerator::SIMPLE_QUADRATIC_FACTORABLE);
-  gen->setMaxDecimalPlaces(2);
+  gen->setMaxDecimalPlaces(1);
   for (int i = 0;; i++) {
+    // random number between 0 and 3
+    gen->setQuestionType((ICSEQuestionGenerator::QuestionType)dis(genn));
+
     ICSEQuestion *question = gen->generateQuestion();
     if (question == NULL) {
       std::cerr << "Error: Question generation failed." << std::endl;
