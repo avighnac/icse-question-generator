@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <basic_math_operations.h>
 #include <stdio.h>
+#include <time.h>
+
 int main()
 {
     srand(time(0));
@@ -15,7 +17,7 @@ int main()
 
     while (1)
     {
-        struct icse_question *question = icse_question_generator_quadratic_examine_roots(&context, RATIONAL_UNEQUAL);
+        struct icse_question *question = icse_question_generator_generate(&context);
         printf("Q: %s\nA: %s\n", question->question, question->answer);
         icse_question_free(question);
     }

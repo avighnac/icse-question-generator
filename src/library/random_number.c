@@ -3,10 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// i can see the term now
-// i had to open from live share menu
-// uhhh
-
 char *icse_question_generator_random_number(size_t number_of_digits)
 {
     if (!number_of_digits) {

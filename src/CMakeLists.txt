@@ -6,11 +6,12 @@ project(icseqgen)
 
 add_library(icse_question_generator
 library/icse_question_free.c
-library/random_number_aarav_version.c
+library/random_number.c
 library/quadratic_examine_roots.c
 library/compare_number.c
+library/generate.c
 )
-# anyways gtg eat
+
 set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -march=native")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3 -ggdb")
 add_executable(icseqgen main.c)
